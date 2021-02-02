@@ -10,7 +10,10 @@ def get_names(path, module_name_position_on_split):
     for filename in glob.iglob(path, recursive=True):
         if os.path.isfile(filename):  # filter dirs
             if filename.endswith(".xml") and 'l10n_' not in filename:
-                module = filename.split("/")[module_name_position_on_split]
+                split_position = module_name_position_on_split
+                if 'odoo/addons' in filename:
+                    split_position += 1
+                module = filename.split("/")[split_position]
                 ids_accepted = process(filename, module)
                 all += ids_accepted
     return all
