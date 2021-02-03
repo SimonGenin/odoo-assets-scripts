@@ -126,7 +126,7 @@ methods = {
     'replace': 'replace',
     'remove': 'remove',
     'include': 'include',
-    'before': 'prepend'
+    'before': 'append'
 }
 
 def generate_action_str(action):

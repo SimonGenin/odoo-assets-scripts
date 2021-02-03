@@ -38,7 +38,7 @@ def is_empty(content):
 def remove_file_from_manifest(manifest_path, path):
     with open(manifest_path, 'r+') as file:
         content = ''.join(file.readlines())
-        pattern = fr"""[\"']{path}[\"']\s*,?"""
+        pattern = fr"""[\"']{path}[\"']\s*,?\s*"""
         new_content = re.sub(pattern, '', content, 1, re.DOTALL)
         pattern = r"""[\"']data[\"']\s*:\s*\[\s*]\s*,?"""
         new_content = re.sub(pattern, '', new_content, 0, re.DOTALL)
@@ -75,14 +75,12 @@ def process(data):
 
 
 def delete(id, content):
-    pattern = fr"""<\s*template\s+id\s*=\s*.{id}..*?<\s*/\s*template\s*>"""
+    pattern = fr"""<\s*template\s+id\s*=\s*.{id}..*?<\s*/\s*template\s*>\s*"""
     return re.sub(pattern, '', content, 0, re.DOTALL)
 
 if __name__ == '__main__':
-    # modules = sys.argv[1].split(',')
-    modules = ['account']
+    modules = sys.argv[1].split(',')
     data = get_data(modules)
-
 
     print(data)
     process(data)
