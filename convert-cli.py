@@ -5,6 +5,7 @@ import re
 import pickle
 import os
 import glob
+import sys
 
 xpath_predicats = [
     """contains(@id, "assets")""",
@@ -29,16 +30,15 @@ def alert(message):
     print("ATTENTION ", message)
     print("---------------------------------")
 
-def convert(items, paths, module_name_position_on_split):
-    dont = ['auth_totp', 'base', 'base_import', 'web', 'web_cohort', 'web_editor', 'web_enterprise', 'web_gantt', 'web_grid', 'web_kanban_gauge', 'web_mobile', 'web_tour']
+def convert(modules, items, paths, module_name_position_on_split):
     top = f"\n{tabulation(1)}'assets': {{"
     done = {}
     visited_manifests = []
     for filename in glob.glob(paths, recursive=True):
         if os.path.isfile(filename):  # filter dirs
-            if '.xml' in filename and 'l10n_' not in filename:
+            if '.xml' in filename:
                 module = filename.split("/")[module_name_position_on_split]
-                if module in dont:
+                if module not in modules:
                     continue
                 done[module] = done.get(module, False)
                 manifest_path = filename.split(module + "/")[0] + module + '/' + '__manifest__.py'
@@ -289,12 +289,21 @@ def process(inherits_from, node, expr, position, depth):
 
     return res
 
-if __name__ == '__main__':
-
+def get_data(modules):
     with open('results.pickle', 'rb') as handle:
         items = pickle.load(handle)
+    items = [item for item in items if item[0] in modules]
+    return items
 
-    convert(items, "../community/addons/**", 3)
-    convert(items, "../enterprise/**", 2)
+
+if __name__ == '__main__':
+
+    modules = sys.argv[1].split(',')
+    items = get_data(modules)
+    print(items)
+
+    modules = [module for module, _, _, _ in items]
+    convert(modules, items, "../community/addons/**", 3)
+    convert(modules, items, "../enterprise/**", 2)
 
 

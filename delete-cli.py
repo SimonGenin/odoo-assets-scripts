@@ -1,10 +1,32 @@
 import pickle
 import re
 import os
+import argparse
+import sys
 
-def get_data():
+def update_path(items):
+    news = []
+    for a, b, c, path in items:
+
+        enterprise = "../enterprise/" + path
+        base = "../community/odoo/addons/" + path
+        community = "../community/addons/" + path
+
+        if os.path.exists(enterprise):
+            news.append((a, b, c, enterprise))
+        elif os.path.exists(base):
+            news.append((a, b, c, base))
+        elif os.path.exists(community):
+            news.append((a, b, c, community))
+        else:
+            print("FUCK")
+    return news
+
+def get_data(modules):
     with open('results.pickle', 'rb') as handle:
         items = pickle.load(handle)
+    items = [item for item in items if item[0] in modules]
+    items = update_path(items)
     return items
 
 def is_empty(content):
@@ -57,5 +79,10 @@ def delete(id, content):
     return re.sub(pattern, '', content, 0, re.DOTALL)
 
 if __name__ == '__main__':
-    data = get_data()
+    # modules = sys.argv[1].split(',')
+    modules = ['account']
+    data = get_data(modules)
+
+
+    print(data)
     process(data)
