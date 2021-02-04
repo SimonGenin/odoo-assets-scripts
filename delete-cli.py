@@ -82,5 +82,4 @@ if __name__ == '__main__':
     modules = sys.argv[1].split(',')
     data = get_data(modules)
 
-    print(data)
     process(data)

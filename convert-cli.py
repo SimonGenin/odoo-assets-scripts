@@ -155,6 +155,12 @@ def generate_action_str(action):
     elif "add" in action[0]:
         content = f"""'{raw_content}',"""
 
+    elif "replace" in action[0]:
+        expr = action[2]
+        pattern = r"""[\"'](?P<path>.+(\.js|\.scss|\.css))[\"']"""
+        matches = re.match(pattern, expr, re.DOTALL)
+        content = f"""('{methods[action[0]]}', '{matches['path']}', '{raw_content}'),"""
+
     elif action[0] in methods:
         content = f"""('{methods[action[0]]}', '{raw_content}'),"""
 
@@ -300,7 +306,6 @@ if __name__ == '__main__':
 
     modules = sys.argv[1].split(',')
     items = get_data(modules)
-    print(items)
 
     modules = [module for module, _, _, _ in items]
     convert(modules, items, "../community/addons/**", 3)
