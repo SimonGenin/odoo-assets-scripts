@@ -158,7 +158,9 @@ def generate_action_str(action):
     elif "replace" in action[0]:
         expr = action[2]
         pattern = r"""[\"'](?P<path>.+(\.js|\.scss|\.css))[\"']"""
-        matches = re.match(pattern, expr, re.DOTALL)
+        if "@t-call" in expr:
+            pattern = r"""[\"'](?P<path>.+)[\"']"""
+        matches = re.search(pattern, expr, re.DOTALL)
         content = f"""('{methods[action[0]]}', '{matches['path']}', '{raw_content}'),"""
 
     elif action[0] in methods:
