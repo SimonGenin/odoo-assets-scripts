@@ -86,22 +86,25 @@ def convert(modules, items, paths, module_name_position_on_split):
                         action_str = generate_action_str(action)
                         actions_str.append(action_str)
 
-                    if not done[module]:
-                        write_in_manifest(manifest_path, top)
-                        done[module] = True
-                        convert_qweb_key_to_asset(manifest_path)
+                    if not module in contents_to_write:
+                        contents_to_write[module]['manifest_path'] = manifest_path
+                        contents_to_write[module]['assets'] = {}
 
-
-
-                    write_in_manifest(manifest_path, f"""\n{tabulation(2)}'{inherits_from}': [\n""")
-
-                    full_str_content = '\n'.join(actions_str)
-
-                    write_in_manifest(manifest_path, full_str_content)
-
-                    write_in_manifest(manifest_path, "\n" + tabulation(2) + "],")
+                    contents_to_write[module]['assets'][inherits_from] = []
+                    contents_to_write[module]['assets'][inherits_from].extend(actions_str)
 
                     visited_manifests.append(manifest_path)
+
+    for module_content in contents_to_write:
+        manifest_path = module_content['manifest_path']
+        write_in_manifest(manifest_path, top)
+        convert_qweb_key_to_asset(manifest_path)
+
+        for asset_name, asset_content in module_content['assets'].items():
+            write_in_manifest(manifest_path, f"""\n{tabulation(2)}'{asset_name}': [\n""")
+            full_str_content = '\n'.join(asset_content)
+            write_in_manifest(manifest_path, full_str_content)
+            write_in_manifest(manifest_path, "\n" + tabulation(2) + "],")
 
     for path in list(set(visited_manifests)):
         write_in_manifest(path, "\n" + tabulation(1) +"}")
