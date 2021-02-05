@@ -90,9 +90,16 @@ def convert(modules, items, paths, module_name_position_on_split):
                         contents_to_write[module] = {}
                         contents_to_write[module]['manifest_path'] = manifest_path
                         contents_to_write[module]['assets'] = {}
+                        contents_to_write[module]['was_assets_backend_present'] = False
 
                     if inherits_from not in contents_to_write[module]['assets'].keys():
                         contents_to_write[module]['assets'][inherits_from] = []
+
+                    if inherits_from == 'web.assets_backend':
+                        contents_to_write[module]['was_assets_backend_present'] = True
+                        content = convert_qweb_key_to_asset(manifest_path)
+                        contents_to_write[module]['assets'][inherits_from].extend(format_qweb_conversion(content))
+                        was_assets_backend_present = True
 
                     contents_to_write[module]['assets'][inherits_from].extend(actions_str)
 
@@ -101,7 +108,12 @@ def convert(modules, items, paths, module_name_position_on_split):
     for module_name, module_content in contents_to_write.items():
         manifest_path = module_content['manifest_path']
         write_in_manifest(manifest_path, top)
-        convert_qweb_key_to_asset(manifest_path)
+
+        if not module_content['was_assets_backend_present']:
+            content = convert_qweb_key_to_asset(manifest_path)
+            if content:
+                contents_to_write[module_name]['assets']['web.assets_backend'] = format_qweb_conversion(content)
+
 
         for asset_name, asset_content in module_content['assets'].items():
             write_in_manifest(manifest_path, f"""\n{tabulation(2)}'{asset_name}': [\n""")
@@ -112,10 +124,17 @@ def convert(modules, items, paths, module_name_position_on_split):
     for path in list(set(visited_manifests)):
         write_in_manifest(path, "\n" + tabulation(1) +"}")
 
+def format_qweb_conversion(content):
+    content = content.split(',')
+    content = list(map(str.strip, content))
+    content = filter(lambda x: x != "", content)
+    content = list(map(lambda x: tabulation(3) + x + ",", content))
+    return content
+
 def convert_qweb_key_to_asset(manifest_path):
     f = open(manifest_path, "r+")
     content = f.read()
-    pattern = r"""(?P<all>[\"']qweb[\"']\s*:\s*(?P<content>\[.*?\]\s*,?\s*))"""
+    pattern = r"""(?P<all>[\"']qweb[\"']\s*:\s*\[(?P<content>.*?)\]\s*,?\s*)"""
     matches = re.search(pattern, content, re.DOTALL)
     if matches:
         new_content = content.replace(matches['all'], '')
@@ -124,11 +143,8 @@ def convert_qweb_key_to_asset(manifest_path):
         f.truncate()
         f.close()
 
-    if matches:
-        write_in_manifest(manifest_path,
-                          '\n' + tabulation(2) + "'assets_qweb': " + matches['content']
-                          .replace(tabulation(2), tabulation(3))
-                          .replace('    ]', tabulation(2) + ']'))
+        return  matches['content']
+
 
 
 
