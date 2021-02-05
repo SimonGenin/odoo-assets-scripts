@@ -26,13 +26,15 @@ def get_data(modules):
     with open('results.pickle', 'rb') as handle:
         items = pickle.load(handle)
     items = [item for item in items if item[0] in modules]
+    items = [item for item in items if item[0] in modules]
     items = update_path(items)
     return items
 
 def is_empty(content):
     if content.strip() == '':
         return True
-    matches = re.match(r""".*?<\s*odoo\s*>\s*(<\s*data\s*>\s*)?\s*(<\s*/\s*data\s*>\s*)?<\s*/\s*odoo\s*>""", content, re.DOTALL | re.MULTILINE)
+    without_comments = re.sub(r"""<!--.*?-->""", '', content, 0, re.DOTALL | re.MULTILINE)
+    matches = re.match(r""".*?<\s*odoo\s*>\s*(<\s*data\s*>\s*)?\s*(<\s*/\s*data\s*>\s*)?<\s*/\s*odoo\s*>""", without_comments, re.DOTALL | re.MULTILINE)
     return bool(matches)
 
 def remove_file_from_manifest(manifest_path, path):
