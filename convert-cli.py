@@ -72,6 +72,15 @@ def convert(modules, items, paths, module_name_position_on_split):
                     if not inherits_from:
                         inherits_from = id
                     raw_actions = process(template, None, None, 0)
+                    active = True
+                    priority = -1
+                    if 'active' in template.keys():
+                        raw_active_content = template.get('active').strip().lower()
+                        if raw_active_content == "0" or raw_active_content == "false":
+                            active = False
+                    if 'priority' in template.keys():
+                        raw_priority_content = template.get('priority').strip().lower()
+                        priority = int(raw_priority_content)
                     # inherits_from = convert_to_new_name(inherits_from)
                     actions = []
 
@@ -91,7 +100,7 @@ def convert(modules, items, paths, module_name_position_on_split):
                     actions_str = []
                     sorted_actions = sort_actions(actions)
                     for action in sorted_actions:
-                        action_str = generate_action_str(action)
+                        action_str = generate_action_str(action, active, priority)
                         actions_str.append(action_str)
 
                     if not module in contents_to_write:
@@ -177,7 +186,7 @@ methods = {
     'before': 'append'
 }
 
-def generate_action_str(action):
+def generate_action_str(action, active = True, priority = -1):
 
     comment = f"""# {action[3]} {action[2]}"""
 
@@ -219,6 +228,12 @@ def generate_action_str(action):
 
     else:
         alert(('No string fo this case!', action))
+
+    if not active:
+        comment += " - This template is not active"
+
+    if priority >= 0:
+        comment += " - This template has priority " + str(priority)
 
     return '\n'.join([tabulation(3) + comment, tabulation(3) + content])
 
@@ -315,7 +330,7 @@ def infer_file_type(data):
     alert(("unknown type:", data))
     return 'unsafe'
 
-def process(node, expr, position, depth):
+def process(node, expr, position, depth, active=True):
 
     if depth > 2:
         print("---------------------------------")
@@ -344,7 +359,7 @@ def process(node, expr, position, depth):
         if (n.tag == 'script' or n.tag == 'link') and n.text:
             alert(("There is a raw text in assets", n.text))
             continue
-        values = process(n, expr, position, depth)
+        values = process(n, expr, position, depth, active)
         res.append(values)
 
     return res
