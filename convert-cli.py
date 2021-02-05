@@ -106,7 +106,8 @@ def convert(modules, items, paths, module_name_position_on_split):
                     if inherits_from == 'web.assets_backend':
                         contents_to_write[module]['was_assets_backend_present'] = True
                         content = convert_qweb_key_to_asset(manifest_path)
-                        contents_to_write[module]['assets'][inherits_from].extend(format_qweb_conversion(content))
+                        if content:
+                            contents_to_write[module]['assets'][inherits_from].extend(format_qweb_conversion(content))
                         was_assets_backend_present = True
 
                     contents_to_write[module]['assets'][inherits_from].extend(actions_str)
