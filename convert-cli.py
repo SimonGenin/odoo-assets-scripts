@@ -33,6 +33,7 @@ def alert(message):
 def convert(modules, items, paths, module_name_position_on_split):
     top = f"\n{tabulation(1)}'assets': {{"
     done = {}
+    contents_to_write = {}
     visited_manifests = []
     for filename in glob.glob(paths, recursive=True):
         if os.path.isfile(filename):  # filter dirs
@@ -60,7 +61,8 @@ def convert(modules, items, paths, module_name_position_on_split):
                         inherits_from = template.get("inherit_id")
                     if (id, inherits_from) not in [(ids, inherit_id) for _, ids, inherit_id, _ in items]:
                         continue
-                    inherits_from = id
+                    if not inherits_from:
+                        inherits_from = id
                     raw_actions = process(inherits_from, template, None, None, 0)
                     # inherits_from = convert_to_new_name(inherits_from)
                     actions = []
@@ -87,6 +89,9 @@ def convert(modules, items, paths, module_name_position_on_split):
                     if not done[module]:
                         write_in_manifest(manifest_path, top)
                         done[module] = True
+                        convert_qweb_key_to_asset(manifest_path)
+
+
 
                     write_in_manifest(manifest_path, f"""\n{tabulation(2)}'{inherits_from}': [\n""")
 
@@ -96,16 +101,29 @@ def convert(modules, items, paths, module_name_position_on_split):
 
                     write_in_manifest(manifest_path, "\n" + tabulation(2) + "],")
 
-                    name = "tests/" + filename.replace("..", ".") + "/" + inherits_from + ".asset"
-                    os.makedirs(os.path.dirname(name), exist_ok=True)
-
-                    with open(name, "w") as f:
-                        f.write(full_str_content)
-
                     visited_manifests.append(manifest_path)
 
     for path in list(set(visited_manifests)):
         write_in_manifest(path, "\n" + tabulation(1) +"}")
+
+def convert_qweb_key_to_asset(manifest_path):
+    f = open(manifest_path, "r+")
+    content = f.read()
+    pattern = r"""(?P<all>[\"']qweb[\"']\s*:\s*(?P<content>\[.*?\]\s*,?\s*))"""
+    matches = re.search(pattern, content, re.DOTALL)
+    if matches:
+        new_content = content.replace(matches['all'], '')
+        f.seek(0)
+        f.write(new_content)
+        f.truncate()
+        f.close()
+
+    if matches:
+        write_in_manifest(manifest_path,
+                          '\n' + tabulation(2) + "'assets_qweb': " + matches['content']
+                          .replace(tabulation(2), tabulation(3))
+                          .replace('    ]', tabulation(2) + ']'))
+
 
 
 def write_in_manifest(manifest_path, content):
@@ -161,7 +179,10 @@ def generate_action_str(action):
         if "@t-call" in expr:
             pattern = r"""[\"'](?P<path>.+)[\"']"""
         matches = re.search(pattern, expr, re.DOTALL)
-        content = f"""('{methods[action[0]]}', '{matches['path']}', '{raw_content}'),"""
+        target = matches['path']
+        if target.startswith('/'):
+            target = target[:-1]
+        content = f"""('{methods[action[0]]}', '{target}', '{raw_content}'),"""
 
     elif action[0] in methods:
         content = f"""('{methods[action[0]]}', '{raw_content}'),"""
