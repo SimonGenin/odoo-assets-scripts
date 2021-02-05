@@ -87,15 +87,18 @@ def convert(modules, items, paths, module_name_position_on_split):
                         actions_str.append(action_str)
 
                     if not module in contents_to_write:
+                        contents_to_write[module] = {}
                         contents_to_write[module]['manifest_path'] = manifest_path
                         contents_to_write[module]['assets'] = {}
 
-                    contents_to_write[module]['assets'][inherits_from] = []
+                    if inherits_from not in contents_to_write[module]['assets'].keys():
+                        contents_to_write[module]['assets'][inherits_from] = []
+
                     contents_to_write[module]['assets'][inherits_from].extend(actions_str)
 
                     visited_manifests.append(manifest_path)
 
-    for module_content in contents_to_write:
+    for module_name, module_content in contents_to_write.items():
         manifest_path = module_content['manifest_path']
         write_in_manifest(manifest_path, top)
         convert_qweb_key_to_asset(manifest_path)
@@ -184,7 +187,7 @@ def generate_action_str(action):
         matches = re.search(pattern, expr, re.DOTALL)
         target = matches['path']
         if target.startswith('/'):
-            target = target[:-1]
+            target = target[1:]
         content = f"""('{methods[action[0]]}', '{target}', '{raw_content}'),"""
 
     elif action[0] in methods:
