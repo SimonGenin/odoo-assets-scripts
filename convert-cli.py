@@ -59,11 +59,19 @@ def convert(modules, items, paths, module_name_position_on_split):
                     inherits_from = None
                     if "inherit_id" in template.keys():
                         inherits_from = template.get("inherit_id")
-                    if (id, inherits_from) not in [(ids, inherit_id) for _, ids, inherit_id, _ in items]:
+                    values = [(ids, xmlid, inherit_id) for _, ids, xmlid, inherit_id, _ in items]
+                    keep = False
+                    for ids, xmlid, inherit_id in values:
+                        if not ((id == ids or id == xmlid) and inherit_id == inherits_from):
+                            keep = keep or False
+                        else:
+                            keep = True
+                    if not keep:
                         continue
+
                     if not inherits_from:
                         inherits_from = id
-                    raw_actions = process(inherits_from, template, None, None, 0)
+                    raw_actions = process(template, None, None, 0)
                     # inherits_from = convert_to_new_name(inherits_from)
                     actions = []
 
@@ -307,11 +315,11 @@ def infer_file_type(data):
     alert(("unknown type:", data))
     return 'unsafe'
 
-def process(inherits_from, node, expr, position, depth):
+def process(node, expr, position, depth):
 
     if depth > 2:
         print("---------------------------------")
-        print("ATTENTION depth is getting bigger", inherits_from, *node.items(), expr, position, depth)
+        print("ATTENTION depth is getting bigger", *node.items(), expr, position, depth)
         print("---------------------------------")
 
     depth += 1
@@ -332,10 +340,11 @@ def process(inherits_from, node, expr, position, depth):
     res = []
 
     for n in node.getchildren():
+
         if (n.tag == 'script' or n.tag == 'link') and n.text:
             alert(("There is a raw text in assets", n.text))
             continue
-        values = process(inherits_from, n, expr, position, depth)
+        values = process(n, expr, position, depth)
         res.append(values)
 
     return res
@@ -352,7 +361,7 @@ if __name__ == '__main__':
     modules = sys.argv[1].split(',')
     items = get_data(modules)
 
-    modules = [module for module, _, _, _ in items]
+    modules = [module for module, _, _, _, _ in items]
     convert(modules, items, "../community/addons/**", 3)
     convert(modules, items, "../enterprise/**", 2)
 

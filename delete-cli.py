@@ -6,18 +6,18 @@ import sys
 
 def update_path(items):
     news = []
-    for a, b, c, path in items:
+    for a, b, c, d, path in items:
 
         enterprise = "../enterprise/" + path
         base = "../community/odoo/addons/" + path
         community = "../community/addons/" + path
 
         if os.path.exists(enterprise):
-            news.append((a, b, c, enterprise))
+            news.append((a, b, c, d, enterprise))
         elif os.path.exists(base):
-            news.append((a, b, c, base))
+            news.append((a, b, c, d, base))
         elif os.path.exists(community):
-            news.append((a, b, c, community))
+            news.append((a, b, c, d, community))
         else:
             print("FUCK")
     return news
@@ -51,12 +51,12 @@ def process(data):
     empties = set()
 
     for item in data:
-        module, id, _, filepath = item
+        module, id, xmlid, _, filepath = item
 
         file = open(filepath, 'r+')
 
         content = ''.join(file.readlines())
-        content = delete(id, content)
+        content = delete(id, xmlid, content)
         empty = is_empty(content)
 
         if empty:
@@ -74,8 +74,8 @@ def process(data):
         remove_file_from_manifest(manifest_path, empty_file.split("/" + module + "/")[1])
 
 
-def delete(id, content):
-    pattern = fr"""<\s*template\s+id\s*=\s*.{id}..*?<\s*/\s*template\s*>\s*"""
+def delete(id, xmlid, content):
+    pattern = fr"""<\s*template\s+id\s*=\s*.({id}|{xmlid})..*?<\s*/\s*template\s*>\s*"""
     return re.sub(pattern, '', content, 0, re.DOTALL)
 
 if __name__ == '__main__':
