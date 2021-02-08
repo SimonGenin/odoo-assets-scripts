@@ -6,11 +6,25 @@ import pickle
 import os
 import glob
 import sys
+import pathlib
+
 
 xpath_predicats = [
     """contains(@id, "assets")""",
     """contains(@id, "qunit_suite")"""
 ]
+
+template_ir_asset = """
+            <record id="__id__" model="ir.asset">
+                <field name="name">__name__</field>
+                <field name="bundle">__bundle__</field>
+                <field name="directive">__directive__</field>
+                <field name="glob">__glob__</field>
+                <field name="target">__target__</field>
+                <field name="active">__active__</field>
+                <field name="priority">__sequence__</field>
+            </record>
+"""
 
 names_changes = {
     "web.assets_tests": "web.test_tours"
@@ -35,6 +49,7 @@ def convert(modules, items, paths, module_name_position_on_split):
     done = {}
     contents_to_write = {}
     visited_manifests = []
+    visited_ir_asset_data = []
     for filename in glob.glob(paths, recursive=True):
         if os.path.isfile(filename):  # filter dirs
             if '.xml' in filename:
@@ -73,7 +88,7 @@ def convert(modules, items, paths, module_name_position_on_split):
                         inherits_from = id
                     raw_actions = process(template, None, None, 0)
                     active = True
-                    priority = -1
+                    priority = 10
                     if 'active' in template.keys():
                         raw_active_content = template.get('active').strip().lower()
                         if raw_active_content == "0" or raw_active_content == "false":
@@ -98,10 +113,24 @@ def convert(modules, items, paths, module_name_position_on_split):
                         actions.append(action)
 
                     actions_str = []
+                    ir_asset_actions_str = []
                     sorted_actions = sort_actions(actions)
                     for action in sorted_actions:
-                        action_str = generate_action_str(action, active, priority)
-                        actions_str.append(action_str)
+                        if active == False or priority != 10:
+                            ir_asset_actions_str.append(generate_ir_asset_action_str(action, active,priority, id, inherits_from))
+                        else:
+                            action_str = generate_action_str(action)
+                            actions_str.append(action_str)
+
+                    if len(ir_asset_actions_str):
+                        ir_asset_file_path = filename.split(module + "/")[0] + module + '/' + 'data/' + 'ir_asset.xml'
+                        ir_asset_data_dir = filename.split(module + "/")[0] + module + '/' + 'data'
+                        if not os.path.exists(ir_asset_data_dir):
+                            os.makedirs(ir_asset_data_dir)
+                        content = '\n'.join(ir_asset_actions_str)
+                        visited_ir_asset_data.append(ir_asset_file_path)
+                        with open(ir_asset_file_path, "a") as f:
+                            f.write(content)
 
                     if not module in contents_to_write:
                         contents_to_write[module] = {}
@@ -140,6 +169,24 @@ def convert(modules, items, paths, module_name_position_on_split):
 
     for path in list(set(visited_manifests)):
         write_in_manifest(path, "\n" + tabulation(1) +"}")
+
+    top = """<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    """
+
+    bottom = """
+    </data>
+</odoo>
+    """
+
+    for path in list(set(visited_ir_asset_data)):
+        print(path)
+        with open(path, 'r+') as f:
+            content = f.read()
+            f.seek(0)
+            f.write(top + content + bottom)
+            f.truncate()
 
 def format_qweb_conversion(content):
     content = content.split(',')
@@ -183,12 +230,15 @@ methods = {
     'replace': 'replace',
     'remove': 'remove',
     'include': 'include',
-    'before': 'append'
+    'before': 'append',
+    'add_end': 'append',
+    'add_after': 'append',
 }
 
-def generate_action_str(action, active = True, priority = -1):
+def generate_action_str(action):
 
     comment = f"""# {action[3]} {action[2]}"""
+
 
     raw_content = action[1]
 
@@ -229,13 +279,36 @@ def generate_action_str(action, active = True, priority = -1):
     else:
         alert(('No string fo this case!', action))
 
-    if not active:
-        comment += " - This template is not active"
-
-    if priority >= 0:
-        comment += " - This template has priority " + str(priority)
-
     return '\n'.join([tabulation(3) + comment, tabulation(3) + content])
+
+def generate_ir_asset_action_str(action, active, priority, template_id, template_inherits_from):
+
+    raw_content = action[1]
+    if raw_content.startswith("/"):
+        raw_content = action[1][1:]
+
+    id = template_id
+    directive = methods.get(action[0], action[0])
+    bundle = template_inherits_from
+    name = template_id.replace("_", " ")
+    glob = raw_content
+    target = "NULL"
+
+    if "replace" in directive:
+        expr = action[2]
+        pattern = r"""[\"'](?P<path>.+(\.js|\.scss|\.css))[\"']"""
+        if "@t-call" in expr:
+            pattern = r"""[\"'](?P<path>.+)[\"']"""
+        matches = re.search(pattern, expr, re.DOTALL)
+        target = matches['path']
+        if target.startswith('/'):
+            target = target[1:]
+
+    instance = template_ir_asset.replace("__id__", id).replace("__name__", name).replace('__bundle__', bundle)
+    instance = instance.replace('__directive__', directive).replace('__glob__', glob).replace('__target__', target)
+    instance = instance.replace("__active__", str(active)).replace("__sequence__", str(priority))
+
+    return instance
 
 
 def sort_actions(actions):
