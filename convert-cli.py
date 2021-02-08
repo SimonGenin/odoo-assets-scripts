@@ -6,8 +6,7 @@ import pickle
 import os
 import glob
 import sys
-import pathlib
-
+import ast
 
 xpath_predicats = [
     """contains(@id, "assets")""",
@@ -181,12 +180,28 @@ def convert(modules, items, paths, module_name_position_on_split):
     """
 
     for path in list(set(visited_ir_asset_data)):
-        print(path)
         with open(path, 'r+') as f:
             content = f.read()
             f.seek(0)
             f.write(top + content + bottom)
             f.truncate()
+        this_module_manifest_path = path.replace('data/ir_asset.xml', '__manifest__.py')
+        with open(this_module_manifest_path, 'r+') as f:
+            content = f.read()
+            content = add_ir_asset_to_manifest_content(content)
+            f.seek(0)
+            f.write(content)
+            f.truncate()
+
+
+def add_ir_asset_to_manifest_content(content):
+    result = re.search(r'''(?P<data>[\"']data[\"']\s*:\s*\[.*?]\s*,?)''', content, re.MULTILINE | re.DOTALL)
+    if not result:
+        print(">>> fuck there is no data key")
+    result = re.search(r'''[\"']data[\"']\s*:\s*\[(?P<xmls>.*?)]\s*,?''', content, re.MULTILINE | re.DOTALL)
+    new_data =  "\n" + tabulation(2) + "'data/ir_asset.xml'," + result['xmls'].rstrip() + '\n' + tabulation(1) + '],'
+    return re.sub(r'''([\"']data[\"']\s*:\s*\[).*?]\s*,?''', rf"\1{new_data}", content, 0, re.MULTILINE | re.DOTALL)
+
 
 def format_qweb_conversion(content):
     content = content.split(',')
@@ -207,7 +222,7 @@ def convert_qweb_key_to_asset(manifest_path):
         f.truncate()
         f.close()
 
-        return  matches['content']
+        return matches['content']
 
 
 
