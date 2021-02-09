@@ -69,22 +69,28 @@ def convert(modules, items, paths, module_name_position_on_split):
                 templates = tree.xpath(request)
 
                 for template in templates:
+                    top_asset = None
                     id = template.get("id")
                     inherits_from = None
                     if "inherit_id" in template.keys():
                         inherits_from = template.get("inherit_id")
-                    values = [(ids, xmlid, inherit_id) for _, ids, xmlid, inherit_id, _ in items]
+                    values = [(ids, xmlid, inherit_id, highest_inherit) for _, ids, xmlid, inherit_id, highest_inherit, _ in items]
                     keep = False
-                    for ids, xmlid, inherit_id in values:
+                    for ids, xmlid, inherit_id, highest_inherit in values:
                         if not ((id == ids or id == xmlid) and inherit_id == inherits_from):
                             keep = keep or False
                         else:
                             keep = True
+                            top_asset = highest_inherit
                     if not keep:
                         continue
 
                     if not inherits_from:
                         inherits_from = id
+
+                    if not top_asset:
+                        top_asset = inherits_from
+
                     raw_actions = process(template, None, None, 0)
                     active = True
                     priority = 10
@@ -137,16 +143,16 @@ def convert(modules, items, paths, module_name_position_on_split):
                         contents_to_write[module]['assets'] = {}
                         contents_to_write[module]['was_assets_backend_present'] = False
 
-                    if inherits_from not in contents_to_write[module]['assets'].keys():
-                        contents_to_write[module]['assets'][inherits_from] = []
+                    if top_asset not in contents_to_write[module]['assets'].keys():
+                        contents_to_write[module]['assets'][top_asset] = []
 
-                    if inherits_from == 'web.assets_backend':
+                    if top_asset == 'web.assets_backend':
                         contents_to_write[module]['was_assets_backend_present'] = True
                         content = convert_qweb_key_to_asset(manifest_path)
                         if content:
-                            contents_to_write[module]['assets'][inherits_from].extend(format_qweb_conversion(content))
+                            contents_to_write[module]['assets'][top_asset].extend(format_qweb_conversion(content))
 
-                    contents_to_write[module]['assets'][inherits_from].extend(actions_str)
+                    contents_to_write[module]['assets'][top_asset].extend(actions_str)
 
                     visited_manifests.append(manifest_path)
 
@@ -464,7 +470,7 @@ if __name__ == '__main__':
     modules = sys.argv[1].split(',')
     items = get_data(modules)
 
-    modules = [module for module, _, _, _, _ in items]
+    modules = [module for module, _, _, _, _, _ in items]
     convert(modules, items, "../community/addons/**", 3)
     convert(modules, items, "../enterprise/**", 2)
 

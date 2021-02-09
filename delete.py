@@ -29,7 +29,7 @@ def process(data):
     empties = set()
 
     for item in data:
-        module, id, _, filepath = item
+        module, id, _, _, filepath = item
 
         file = open(filepath, 'r+')
 

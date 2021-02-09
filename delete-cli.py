@@ -6,7 +6,7 @@ import sys
 
 def update_path(items):
     news = []
-    for a, b, c, d, path in items:
+    for a, b, c, d, e, path in items:
 
         enterprise = "../enterprise/" + path
         base = "../community/odoo/addons/" + path

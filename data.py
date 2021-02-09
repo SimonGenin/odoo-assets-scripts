@@ -41,7 +41,7 @@ if __name__ == '__main__':
     subset = df[['module', 'name', 'xmlid', 'inherit_id', 'arch_fs']]
     tuples = [tuple(x) for x in subset.to_numpy()]
 
-    final = [(module, id, xmlid, get_xmlid(df, get_highest_inherit_id(df, inherit_id)), file) for (module, id, xmlid, inherit_id, file) in tuples]
+    final = [(module, id, xmlid, get_xmlid(df, inherit_id), get_xmlid(df, get_highest_inherit_id(df, inherit_id)), file) for (module, id, xmlid, inherit_id, file) in tuples]
 
     with open('results.pickle', 'wb') as handle:
         pickle.dump(final, handle, protocol=pickle.HIGHEST_PROTOCOL)
