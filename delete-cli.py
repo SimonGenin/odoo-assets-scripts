@@ -19,7 +19,7 @@ def update_path(items):
         elif os.path.exists(community):
             news.append((a, b, c, d, community))
         else:
-            print("FUCK")
+            print("FUCK =>", a, b, c, d, e, path)
     return news
 
 def get_data(modules):

@@ -122,7 +122,7 @@ def convert(modules, items, paths, module_name_position_on_split):
                     ir_asset_actions_str = []
                     sorted_actions = sort_actions(actions)
                     for action in sorted_actions:
-                        if active == False or priority != 10:
+                        if active == False or priority != 16:
                             ir_asset_actions_str.append(generate_ir_asset_action_str(action, active,priority, id, inherits_from))
                         else:
                             action_str = generate_action_str(action)
@@ -142,16 +142,18 @@ def convert(modules, items, paths, module_name_position_on_split):
                         contents_to_write[module] = {}
                         contents_to_write[module]['manifest_path'] = manifest_path
                         contents_to_write[module]['assets'] = {}
-                        contents_to_write[module]['was_assets_backend_present'] = False
+                        contents_to_write[module]['was_assets_qweb_present'] = False
 
                     if top_asset not in contents_to_write[module]['assets'].keys():
                         contents_to_write[module]['assets'][top_asset] = []
 
-                    if top_asset == 'web.assets_backend':
-                        contents_to_write[module]['was_assets_backend_present'] = True
+                    # todo
+                    if top_asset == 'web.assets_qweb':
+                        top_asset = 'web.assets_qweb'
+                        contents_to_write[module]['was_assets_qweb_present'] = True
                         content = convert_qweb_key_to_asset(manifest_path)
                         if content:
-                            contents_to_write[module]['assets'][top_asset].extend(format_qweb_conversion(content))
+                            contents_to_write[module]['assets'][top_asset].extend(format_qweb_conversion(content, module))
 
                     contents_to_write[module]['assets'][top_asset].extend(actions_str)
 
@@ -161,10 +163,11 @@ def convert(modules, items, paths, module_name_position_on_split):
         manifest_path = module_content['manifest_path']
         write_in_manifest(manifest_path, top)
 
-        if not module_content['was_assets_backend_present']:
+        # todo
+        if not module_content['was_assets_qweb_present']:
             content = convert_qweb_key_to_asset(manifest_path)
             if content:
-                contents_to_write[module_name]['assets']['web.assets_backend'] = format_qweb_conversion(content)
+                contents_to_write[module_name]['assets']['web.assets_qweb'] = format_qweb_conversion(content, module_name)
 
 
         for asset_name, asset_content in module_content['assets'].items():
@@ -213,10 +216,11 @@ def add_ir_asset_to_manifest_content(content):
     return re.sub(r'''([\"']data[\"']\s*:\s*\[).*?]\s*,?''', rf"\1{new_data}", content, 0, re.MULTILINE | re.DOTALL)
 
 
-def format_qweb_conversion(content):
+def format_qweb_conversion(content, module):
     content = content.split(',')
     content = list(map(str.strip, content))
     content = filter(lambda x: x != "", content)
+    content = list(map(lambda x: x[0] + module + "/" + x[1:] , content))
     content = list(map(lambda x: tabulation(3) + x + ",", content))
     return content
 
