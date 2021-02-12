@@ -7,21 +7,22 @@ import os
 import glob
 import sys
 import ast
+import secrets
 
 xpath_predicats = [
     """contains(@id, "assets")""",
     """contains(@id, "qunit_suite")"""
 ]
-
+#
 template_ir_asset = """
             <record id="__id__" model="ir.asset">
                 <field name="name">__name__</field>
                 <field name="bundle">__bundle__</field>
                 <field name="directive">__directive__</field>
                 <field name="glob">__glob__</field>
-                <field name="target">__target__</field>
-                <field name="active">__active__</field>
-                <field name="priority">__sequence__</field>
+                <field name="target" eval="__target__"></field>
+                <field name="active" eval="__active__"></field>
+                <field name="sequence" eval="__sequence__"></field>
             </record>
 """
 
@@ -167,6 +168,9 @@ def convert(modules, items, paths, module_name_position_on_split):
 
 
         for asset_name, asset_content in module_content['assets'].items():
+            parts = asset_name.split('.')
+            if len(parts) > 1:
+                asset_name = '.'.join(parts[1:])
             write_in_manifest(manifest_path, f"""\n{tabulation(2)}'{asset_name}': [\n""")
             full_str_content = '\n'.join(asset_content)
             write_in_manifest(manifest_path, full_str_content)
@@ -231,8 +235,6 @@ def convert_qweb_key_to_asset(manifest_path):
         return matches['content']
 
 
-
-
 def write_in_manifest(manifest_path, content):
     with open(manifest_path, "r+") as f:
         position = 0
@@ -251,9 +253,10 @@ methods = {
     'replace': 'replace',
     'remove': 'remove',
     'include': 'include',
-    'before': 'append',
+    'append': 'append',
+    'before': 'before',
     'add_end': 'append',
-    'add_after': 'append',
+    'add_after': 'after',
 }
 
 def generate_action_str(action):
@@ -280,10 +283,13 @@ def generate_action_str(action):
     elif "raw" in action[0]:
         content = "# raw need to be manually included"
 
-    elif "add" in action[0]:
+    elif "add_end" in action[0] or "add" == action[0] :
         content = f"""'{raw_content}',"""
 
-    elif "replace" in action[0]:
+    elif "before" in action[0] and (action[2] == "//link" or action[2] == "//script"):
+        content = f"""('prepend', '{raw_content}'),"""
+
+    elif "replace" in action[0] or "add_after" in action[0] or "before" in action[0]:
         expr = action[2]
         pattern = r"""[\"'](?P<path>.+(\.js|\.scss|\.css))[\"']"""
         if "@t-call" in expr:
@@ -313,9 +319,12 @@ def generate_ir_asset_action_str(action, active, priority, template_id, template
     bundle = template_inherits_from
     name = template_id.replace("_", " ")
     glob = raw_content
-    target = "NULL"
+    target = "None"
 
-    if "replace" in directive:
+    if directive == "before" and (action[2] == "//link" or action[2] == "//script"):
+        directive = "prepend"
+
+    if "replace" in directive or "before" in directive or "after" in directive:
         expr = action[2]
         pattern = r"""[\"'](?P<path>.+(\.js|\.scss|\.css))[\"']"""
         if "@t-call" in expr:
@@ -325,7 +334,8 @@ def generate_ir_asset_action_str(action, active, priority, template_id, template
         if target.startswith('/'):
             target = target[1:]
 
-    instance = template_ir_asset.replace("__id__", id).replace("__name__", name).replace('__bundle__', bundle)
+    secret = secrets.token_hex(nbytes=1)
+    instance = template_ir_asset.replace("__id__", id + "_" + secret).replace("__name__", name).replace('__bundle__', bundle)
     instance = instance.replace('__directive__', directive).replace('__glob__', glob).replace('__target__', target)
     instance = instance.replace("__active__", str(active)).replace("__sequence__", str(priority))
 
@@ -382,7 +392,7 @@ def generate_action(data):
         return (data['position'], path, data['expr'], data['position'])
 
     elif data['expr'] == None and data['position'] == None:
-        return ('add', data[attr[file_type]], "", "new module")
+        return ('add', data[attr[file_type]], "", "new asset template")
 
     elif data['expr'] == '.' and data['position'] == 'inside':
         return ('add', data[attr[file_type]], data['expr'], data['position'])
