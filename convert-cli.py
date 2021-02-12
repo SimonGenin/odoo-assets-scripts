@@ -94,7 +94,7 @@ def convert(modules, items, paths, module_name_position_on_split):
 
                     raw_actions = process(template, None, None, 0)
                     active = True
-                    priority = 10
+                    priority = 16
                     if 'active' in template.keys():
                         raw_active_content = template.get('active').strip().lower()
                         if raw_active_content == "0" or raw_active_content == "false":
