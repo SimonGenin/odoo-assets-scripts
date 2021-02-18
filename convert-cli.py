@@ -87,8 +87,7 @@ def convert(modules, items, paths, module_name_position_on_split):
                             primary = mode == 'primary'
                             if primary:
                                 top_asset = xmlid
-                                if module != 'web':
-                                    top_asset = xmlid
+
                     if not keep:
                         continue
 
@@ -98,11 +97,10 @@ def convert(modules, items, paths, module_name_position_on_split):
                     if not top_asset:
                         top_asset = inherits_from
 
-                    if top_asset.startswith('web.'):
-
-                        parts = top_asset.split('.')
-                        if len(parts) > 1:
-                            top_asset = '.'.join(parts[1:])
+                    # if top_asset.startswith('web.'):
+                    #     parts = top_asset.split('.')
+                    #     if len(parts) > 1:
+                    #         top_asset = '.'.join(parts[1:])
 
                     raw_actions = process(template, None, None, 0)
                     active = True
