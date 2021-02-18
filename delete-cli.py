@@ -77,7 +77,7 @@ def process(data):
 
 
 def delete(id, xmlid, content):
-    pattern = fr"""<\s*template\s+id\s*=\s*.({id}|{xmlid})..*?<\s*/\s*template\s*>\s*"""
+    pattern = fr"""<\s*template\s+id\s*=\s*['"]({id}|{xmlid})['"].*?<\s*/\s*template\s*>\s*"""
     return re.sub(pattern, '', content, 0, re.DOTALL)
 
 if __name__ == '__main__':

@@ -72,6 +72,7 @@ def convert(modules, items, paths, module_name_position_on_split):
                 for template in templates:
                     top_asset = None
                     id = template.get("id")
+
                     inherits_from = None
                     primary = False
                     if "inherit_id" in template.keys():
@@ -79,9 +80,11 @@ def convert(modules, items, paths, module_name_position_on_split):
                     values = [(ids, xmlid, inherit_id, highest_inherit, mode) for _, ids, xmlid, inherit_id, highest_inherit, mode, _ in items]
                     keep = False
                     for ids, xmlid, inherit_id, highest_inherit, mode in values:
+
                         if not ((id == ids or id == xmlid) and inherit_id == inherits_from):
                             keep = keep or False
                         else:
+
                             keep = True
                             top_asset = highest_inherit
                             primary = mode == 'primary'
