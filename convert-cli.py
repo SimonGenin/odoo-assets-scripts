@@ -73,16 +73,22 @@ def convert(modules, items, paths, module_name_position_on_split):
                     top_asset = None
                     id = template.get("id")
                     inherits_from = None
+                    primary = False
                     if "inherit_id" in template.keys():
                         inherits_from = template.get("inherit_id")
-                    values = [(ids, xmlid, inherit_id, highest_inherit) for _, ids, xmlid, inherit_id, highest_inherit, _ in items]
+                    values = [(ids, xmlid, inherit_id, highest_inherit, mode) for _, ids, xmlid, inherit_id, highest_inherit, mode, _ in items]
                     keep = False
-                    for ids, xmlid, inherit_id, highest_inherit in values:
+                    for ids, xmlid, inherit_id, highest_inherit, mode in values:
                         if not ((id == ids or id == xmlid) and inherit_id == inherits_from):
                             keep = keep or False
                         else:
                             keep = True
                             top_asset = highest_inherit
+                            primary = mode == 'primary'
+                            if primary:
+                                top_asset = xmlid
+                                if module != 'web':
+                                    top_asset = xmlid
                     if not keep:
                         continue
 
@@ -91,6 +97,12 @@ def convert(modules, items, paths, module_name_position_on_split):
 
                     if not top_asset:
                         top_asset = inherits_from
+
+                    if top_asset.startswith('web.'):
+
+                        parts = top_asset.split('.')
+                        if len(parts) > 1:
+                            top_asset = '.'.join(parts[1:])
 
                     raw_actions = process(template, None, None, 0)
                     active = True
@@ -123,7 +135,7 @@ def convert(modules, items, paths, module_name_position_on_split):
                     sorted_actions = sort_actions(actions)
                     for action in sorted_actions:
                         if active == False or priority != 16:
-                            ir_asset_actions_str.append(generate_ir_asset_action_str(action, active,priority, id, inherits_from))
+                            ir_asset_actions_str.append(generate_ir_asset_action_str(action, active,priority, id, top_asset))
                         else:
                             action_str = generate_action_str(action)
                             actions_str.append(action_str)
@@ -171,9 +183,6 @@ def convert(modules, items, paths, module_name_position_on_split):
 
 
         for asset_name, asset_content in module_content['assets'].items():
-            parts = asset_name.split('.')
-            if len(parts) > 1:
-                asset_name = '.'.join(parts[1:])
             write_in_manifest(manifest_path, f"""\n{tabulation(2)}'{asset_name}': [\n""")
             full_str_content = '\n'.join(asset_content)
             write_in_manifest(manifest_path, full_str_content)
@@ -484,7 +493,7 @@ if __name__ == '__main__':
     modules = sys.argv[1].split(',')
     items = get_data(modules)
 
-    modules = [module for module, _, _, _, _, _ in items]
+    modules = [module for module, _, _, _, _, _, _ in items]
     convert(modules, items, "../community/addons/**", 3)
     convert(modules, items, "../enterprise/**", 2)
 

@@ -6,7 +6,7 @@ import sys
 
 def update_path(items):
     news = []
-    for a, b, c, d, e, path in items:
+    for a, b, c, d, e, f, path in items:
 
         enterprise = "../enterprise/" + path
         base = "../community/odoo/addons/" + path
@@ -19,7 +19,7 @@ def update_path(items):
         elif os.path.exists(community):
             news.append((a, b, c, d, community))
         else:
-            print("FUCK =>", a, b, c, d, e, path)
+            print("FUCK =>", a, b, c, d, e, f, path)
     return news
 
 def get_data(modules):
