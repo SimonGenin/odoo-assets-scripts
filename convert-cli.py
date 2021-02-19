@@ -6,7 +6,6 @@ import pickle
 import os
 import glob
 import sys
-import ast
 import secrets
 
 xpath_predicats = [
