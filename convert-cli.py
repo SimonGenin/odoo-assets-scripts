@@ -173,6 +173,7 @@ def convert(modules, items, paths, module_name_position_on_split):
 
     for module_name, module_content in contents_to_write.items():
         manifest_path = module_content['manifest_path']
+        sanitize_manifest(manifest_path)
         write_in_manifest(manifest_path, top)
 
         # todo
@@ -215,6 +216,15 @@ def convert(modules, items, paths, module_name_position_on_split):
             f.write(content)
             f.truncate()
 
+def sanitize_manifest(path):
+    write_in_manifest(path, ',')
+    file = open(path, 'r+')
+    content = file.read()
+    content = re.sub(r""",\s*,""", ',', content, 0, re.DOTALL | re.MULTILINE)
+    file.seek(0)
+    file.write(content)
+    file.truncate()
+    file.close()
 
 def add_ir_asset_to_manifest_content(content):
     result = re.search(r'''(?P<data>[\"']data[\"']\s*:\s*\[.*?]\s*,?)''', content, re.MULTILINE | re.DOTALL)
@@ -308,6 +318,10 @@ def generate_action_str(action):
         if "@t-call" in expr:
             pattern = r"""[\"'](?P<path>.+)[\"']"""
         matches = re.search(pattern, expr, re.DOTALL)
+        if not matches:
+            content = "# unsafe... " + ' '.join(action)
+            print(content)
+            return content
         target = matches['path']
         if target.startswith('/'):
             target = target[1:]
@@ -368,7 +382,6 @@ def sort_actions(actions):
             other.append(action)
     return other + after + end
 
-
 attr = {
     'js': 'src',
     'scss': 'href'
@@ -399,7 +412,7 @@ def generate_action(data):
 
     elif data['tag'] == 'xpath':
         if data['expr'] == '.' and data['position'] == 'inside':
-            return ('add', "# That shouldn't exist...", data['expr'], data['position'])
+            return ('unsafe', "", data['expr'], data['position'])
         s = data['expr'].replace("'", "").replace('"', "")
         path = re.search("""@.*=(?P<path>.*)]""", s).groupdict()['path']
         return (data['position'], path, data['expr'], data['position'])

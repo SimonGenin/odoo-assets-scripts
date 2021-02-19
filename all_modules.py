@@ -27,9 +27,9 @@ if __name__ == '__main__':
         for d in dirs:
             manifest_path = module_path + '/' + d + '/__manifest__.py'
 
-            if 'l10n' in d:
-                print(d, "is for translation, we pass")
-                continue
+            # if 'l10n' in d:
+            #     print(d, "is for translation, we pass")
+            #     continue
 
             if not path.exists(manifest_path):
                 print(d, "is weird, let's pass...")
@@ -41,4 +41,4 @@ if __name__ == '__main__':
             else:
                 print(d, 'has been done already (or had nothing to be done)')
 
-    # print('\n'.join(keep))
+    print(' && '.join(sorted(map(lambda x: 'assets ' + x, keep))))
