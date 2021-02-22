@@ -74,6 +74,7 @@ def convert(modules, items, paths, module_name_position_on_split):
 
                     inherits_from = None
                     primary = False
+                    primary_parent = None
                     if "inherit_id" in template.keys():
                         inherits_from = template.get("inherit_id")
                     values = [(ids, xmlid, inherit_id, highest_inherit, mode) for _, ids, xmlid, inherit_id, highest_inherit, mode, _ in items]
@@ -88,6 +89,9 @@ def convert(modules, items, paths, module_name_position_on_split):
                             top_asset = highest_inherit
                             primary = mode == 'primary'
                             if primary:
+                                if inherit_id != xmlid:
+                                    # this should be done in data cause we need the previous highest parent
+                                    primary_parent = inherit_id
                                 top_asset = xmlid
 
                     if not keep:
@@ -158,6 +162,11 @@ def convert(modules, items, paths, module_name_position_on_split):
 
                     if top_asset not in contents_to_write[module]['assets'].keys():
                         contents_to_write[module]['assets'][top_asset] = []
+
+                    if primary and primary_parent:
+                        value = '\n'.join([tabulation(3) + "# Is primary with parent", tabulation(3) + f"('include', '{primary_parent}'),"])
+                        actions_str.insert(0, value)
+
 
                     # todo
                     if top_asset == 'web.assets_qweb':
