@@ -1,4 +1,4 @@
-"module","name","xmlid","id","name-2","model","key","priority","type","arch_db","arch_fs","arch_updated","arch_prev","inherit_id","field_parent","mode","active","create_uid","create_date","write_uid","write_date","customize_show","website_meta_title","website_meta_description","website_meta_keywords","website_meta_og_img","seo_name","website_id","track","visibility","visibility_password","theme_template_id"
+git checlout "module","name","xmlid","id","name-2","model","key","priority","type","arch_db","arch_fs","arch_updated","arch_prev","inherit_id","field_parent","mode","active","create_uid","create_date","write_uid","write_date","customize_show","website_meta_title","website_meta_description","website_meta_keywords","website_meta_og_img","seo_name","website_id","track","visibility","visibility_password","theme_template_id"
 "account","_assets_primary_variables","account._assets_primary_variables",1550,"_assets_primary_variables",NULL,"account._assets_primary_variables",16,"qweb","<?xml version=""1.0""?>
 <data inherit_id=""web._assets_primary_variables"">
         <xpath expr=""//link[last()]"" position=""after"">

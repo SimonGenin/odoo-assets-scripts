@@ -48,6 +48,7 @@ def convert(modules, items, paths, module_name_position_on_split):
     done = {}
     contents_to_write = {}
     visited_manifests = []
+    manifest_that_should_be_visited = []
     visited_ir_asset_data = []
     for filename in glob.glob(paths, recursive=True):
         if os.path.isfile(filename):  # filter dirs
@@ -224,6 +225,8 @@ def convert(modules, items, paths, module_name_position_on_split):
             f.seek(0)
             f.write(content)
             f.truncate()
+
+    return visited_manifests
 
 def sanitize_manifest(path):
     write_in_manifest(path, ',')
@@ -510,13 +513,68 @@ def get_data(modules):
     return items
 
 
+def get_all_manifests(modules, path, module_name_position_on_split):
+    acc = []
+    for filename in glob.glob(path, recursive=True):
+        if os.path.isfile(filename):  # filter dirs
+            if '__manifest__.py' in filename:
+                module = filename.split("/")[module_name_position_on_split]
+                if module not in modules:
+                    continue
+                acc.append(filename)
+    return acc
+
+def has_qweb_key_and_not_empty(manifest_path):
+
+    with open(manifest_path, 'r') as f:
+        content = f.read()
+
+    has_key_pattern = r"""['"]qweb['"]\s*:"""
+    key_is_empty = r"""['"]qweb['"]\s*:\s*\[\s*\]"""
+
+    if re.search(key_is_empty, content, re.DOTALL):
+        print("There is an empty key in", manifest_path)
+        return False
+
+    if re.search(has_key_pattern, content, re.DOTALL):
+        print("There is a key in", manifest_path)
+        return True
+
+    return False
+
 if __name__ == '__main__':
 
-    modules = sys.argv[1].split(',')
-    items = get_data(modules)
+    m = sys.argv[1].split(',')
+    items = get_data(m)
 
     modules = [module for module, _, _, _, _, _, _ in items]
-    convert(modules, items, "../community/addons/**", 3)
-    convert(modules, items, "../enterprise/**", 2)
+    visited_manifests = convert(modules, items, "../community/addons/**", 3)
+    visited_manifests += convert(modules, items, "../enterprise/**", 2)
 
+    manifests = get_all_manifests(m, "../community/addons/**", 3)
+    manifests += get_all_manifests(m, "../enterprise/**", 2)
+
+    visited_manifests = list(set(visited_manifests))
+    manifests = list(set(manifests))
+
+    print(visited_manifests)
+    print(manifests)
+
+    for path in visited_manifests:
+        manifests.remove(path)
+
+    print(manifests)
+
+    for manifest in manifests:
+        if has_qweb_key_and_not_empty(manifest):
+            sanitize_manifest(manifest)
+            write_in_manifest(manifest, f"\n{tabulation(1)}'assets': {{")
+            content = convert_qweb_key_to_asset(manifest)
+            module = manifest.split("/")[3 if 'community/addons/' in manifest else 2]
+            contents = format_qweb_conversion(content, module)
+            write_in_manifest(manifest, f"""\n{tabulation(2)}'web.assets_qweb': [\n""")
+            full_str_content = '\n'.join(contents)
+            write_in_manifest(manifest, full_str_content)
+            write_in_manifest(manifest, "\n" + tabulation(2) + "],")
+            write_in_manifest(manifest, "\n" + tabulation(1) + "}")
 
