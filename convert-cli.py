@@ -66,6 +66,7 @@ def convert(modules, items, paths, module_name_position_on_split):
 
                 parser = etree.XMLParser(remove_comments=True)
                 tree = etree.parse(StringIO(xml_content), parser=parser)
+                # request = f"""//template|//data/inherit_id|//t/@inherit_id"""
                 request = f"""//template"""
                 templates = tree.xpath(request)
 
@@ -545,8 +546,12 @@ if __name__ == '__main__':
 
     modules = [module for module, _, _, _, _, _, _ in items]
     visited_manifests = convert(modules, items, "../community/addons/**", 3)
+    print('./community/addons/** done')
     visited_manifests += convert(modules, items, "../community/odoo/addons/**", 4)
+    print('./community/odoo/addons/** done')
     visited_manifests += convert(modules, items, "../enterprise/**", 2)
+    print('./enterprise/** done')
+
 
     manifests = get_all_manifests(m, "../community/addons/**", 3)
     manifests += get_all_manifests(m, "../community/odoo/addons/**", 4)
