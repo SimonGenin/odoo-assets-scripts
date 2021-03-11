@@ -81,7 +81,6 @@ def convert(modules, items, paths, module_name_position_on_split):
                     values = [(ids, xmlid, inherit_id, highest_inherit, mode) for _, ids, xmlid, inherit_id, highest_inherit, mode, _ in items]
                     keep = False
                     for ids, xmlid, inherit_id, highest_inherit, mode in values:
-
                         if not ((id == ids or id == xmlid) and inherit_id == inherits_from):
                             keep = keep or False
                         else:
@@ -332,7 +331,6 @@ def generate_action_str(action):
         matches = re.search(pattern, expr, re.DOTALL)
         if not matches:
             content = "# unsafe... " + ' '.join(action)
-            print(content)
             return content
         target = matches['path']
         if target.startswith('/'):
@@ -533,11 +531,9 @@ def has_qweb_key_and_not_empty(manifest_path):
     key_is_empty = r"""['"]qweb['"]\s*:\s*\[\s*\]"""
 
     if re.search(key_is_empty, content, re.DOTALL):
-        print("There is an empty key in", manifest_path)
         return False
 
     if re.search(has_key_pattern, content, re.DOTALL):
-        print("There is a key in", manifest_path)
         return True
 
     return False
@@ -549,21 +545,18 @@ if __name__ == '__main__':
 
     modules = [module for module, _, _, _, _, _, _ in items]
     visited_manifests = convert(modules, items, "../community/addons/**", 3)
+    visited_manifests += convert(modules, items, "../community/odoo/addons/**", 4)
     visited_manifests += convert(modules, items, "../enterprise/**", 2)
 
     manifests = get_all_manifests(m, "../community/addons/**", 3)
+    manifests += get_all_manifests(m, "../community/odoo/addons/**", 4)
     manifests += get_all_manifests(m, "../enterprise/**", 2)
 
     visited_manifests = list(set(visited_manifests))
     manifests = list(set(manifests))
 
-    print(visited_manifests)
-    print(manifests)
-
     for path in visited_manifests:
         manifests.remove(path)
-
-    print(manifests)
 
     for manifest in manifests:
         if has_qweb_key_and_not_empty(manifest):

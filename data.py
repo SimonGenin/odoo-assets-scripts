@@ -6,7 +6,7 @@ import pickle
 import math
 
 def get_xmlid(df, id):
-    answer = df[df['id'] == id][['xmlid']].to_numpy()
+    answer = df[df['id'] == id][['key']].to_numpy()
     if len(answer) == 0:
         return None
     return answer[0][0]
@@ -43,7 +43,7 @@ def get_highest_inherit_id(df, id):
 if __name__ == '__main__':
     df = pd.read_csv('data.csv')
     # print(df)
-    subset = df[['id', 'module', 'name', 'xmlid', 'inherit_id', 'mode', 'arch_fs']]
+    subset = df[['id', 'module', 'xml_name', 'key', 'inherit_id', 'mode', 'arch_fs']]
     tuples = [tuple(x) for x in subset.to_numpy()]
 
     final = [(module, name, xmlid, get_xmlid(df, inherit_id), get_xmlid(df, get_highest_inherit_id(df, identifier)), mode, file) for (identifier, module, name, xmlid, inherit_id, mode, file) in tuples]
