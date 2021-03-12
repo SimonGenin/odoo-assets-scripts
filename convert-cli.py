@@ -568,7 +568,12 @@ if __name__ == '__main__':
             sanitize_manifest(manifest)
             write_in_manifest(manifest, f"\n{tabulation(1)}'assets': {{")
             content = convert_qweb_key_to_asset(manifest)
-            module = manifest.split("/")[3 if 'community/addons/' in manifest else 2]
+            if 'community/addons/' in manifest:
+                module = manifest.split("/")[3]
+            if 'enterprise/' in manifest:
+                module = manifest.split("/")[2]
+            if 'community/odoo/addons' in manifest:
+                module = manifest.split("/")[4]
             contents = format_qweb_conversion(content, module)
             write_in_manifest(manifest, f"""\n{tabulation(2)}'web.assets_qweb': [\n""")
             full_str_content = '\n'.join(contents)
