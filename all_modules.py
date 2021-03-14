@@ -17,7 +17,8 @@ if __name__ == '__main__':
     module_paths = [
         '../community/addons',
         '../enterprise',
-        '../community/odoo/addons'
+        '../community/odoo/addons',
+        '../design-themes',
     ]
 
     keep = []

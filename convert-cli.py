@@ -551,11 +551,14 @@ if __name__ == '__main__':
     print('./community/odoo/addons/** done')
     visited_manifests += convert(modules, items, "../enterprise/**", 2)
     print('./enterprise/** done')
+    visited_manifests += convert(modules, items, "../design-themes/**", 2)
+    print('./design-themes/** done')
 
 
     manifests = get_all_manifests(m, "../community/addons/**", 3)
     manifests += get_all_manifests(m, "../community/odoo/addons/**", 4)
     manifests += get_all_manifests(m, "../enterprise/**", 2)
+    manifests += get_all_manifests(m, "../design-themes/**", 2)
 
     visited_manifests = list(set(visited_manifests))
     manifests = list(set(manifests))
@@ -571,6 +574,8 @@ if __name__ == '__main__':
             if 'community/addons/' in manifest:
                 module = manifest.split("/")[3]
             if 'enterprise/' in manifest:
+                module = manifest.split("/")[2]
+            if 'design-themes/' in manifest:
                 module = manifest.split("/")[2]
             if 'community/odoo/addons' in manifest:
                 module = manifest.split("/")[4]
