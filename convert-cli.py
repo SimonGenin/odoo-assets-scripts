@@ -60,6 +60,7 @@ def convert(modules, items, paths, module_name_position_on_split):
                 manifest_path = filename.split(module + "/")[0] + module + '/' + '__manifest__.py'
                 with open(filename, "r") as xml_file:
                     xml_content = xml_file.readlines()
+                    print("xml file:", filename)
                     if "version" in xml_content[0]:
                         xml_content = xml_content[1:]  # Remove the xml declaration line
                     xml_content = ''.join(xml_content)
@@ -363,6 +364,7 @@ def generate_ir_asset_action_str(action, active, priority, template_id, template
         directive = "prepend"
 
     if "replace" in directive or "before" in directive or "after" in directive:
+        print(action, active, priority, template_id, template_inherits_from)
         expr = action[2]
         pattern = r"""[\"'](?P<path>.+(\.js|\.scss|\.css))[\"']"""
         if "@t-call" in expr:
@@ -372,8 +374,7 @@ def generate_ir_asset_action_str(action, active, priority, template_id, template
         if target.startswith('/'):
             target = target[1:]
 
-    secret = secrets.token_hex(nbytes=1)
-    instance = template_ir_asset.replace("__id__", id + "_" + secret).replace("__name__", name).replace('__bundle__', bundle)
+    instance = template_ir_asset.replace("__id__", id).replace("__name__", name).replace('__bundle__', bundle)
     instance = instance.replace('__directive__', directive).replace('__glob__', glob).replace('__target__', target)
     instance = instance.replace("__active__", str(active)).replace("__sequence__", str(priority))
 
