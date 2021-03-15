@@ -60,7 +60,9 @@ def convert(modules, items, paths, module_name_position_on_split):
                 manifest_path = filename.split(module + "/")[0] + module + '/' + '__manifest__.py'
                 with open(filename, "r") as xml_file:
                     xml_content = xml_file.readlines()
-                    print("xml file:", filename)
+                    if not xml_content:
+                        print("xml file:", filename)
+                        continue
                     if "version" in xml_content[0]:
                         xml_content = xml_content[1:]  # Remove the xml declaration line
                     xml_content = ''.join(xml_content)
