@@ -48,8 +48,6 @@ if __name__ == '__main__':
 
     final = [(module, name, xmlid, get_xmlid(df, inherit_id), get_xmlid(df, get_highest_inherit_id(df, identifier)), mode, file) for (identifier, module, name, xmlid, inherit_id, mode, file) in tuples]
 
-    print(final)
-
     with open('results.pickle', 'wb') as handle:
         pickle.dump(final, handle, protocol=pickle.HIGHEST_PROTOCOL)
 

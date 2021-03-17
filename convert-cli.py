@@ -197,10 +197,13 @@ def convert(modules, items, paths, module_name_position_on_split):
 
 
         for asset_name, asset_content in module_content['assets'].items():
-            write_in_manifest(manifest_path, f"""\n{tabulation(2)}'{asset_name}': [\n""")
             full_str_content = '\n'.join(asset_content)
-            write_in_manifest(manifest_path, full_str_content)
-            write_in_manifest(manifest_path, "\n" + tabulation(2) + "],")
+            if full_str_content.strip():
+                write_in_manifest(manifest_path, f"""\n{tabulation(2)}'{asset_name}': [\n""")
+                write_in_manifest(manifest_path, full_str_content)
+                write_in_manifest(manifest_path, "\n" + tabulation(2) + "],")
+            else:
+                print("That asset is empty so we don't write it:", module_name + "::" + asset_name)
 
     for path in list(set(visited_manifests)):
         write_in_manifest(path, "\n" + tabulation(1) +"}")
@@ -554,14 +557,14 @@ if __name__ == '__main__':
     print('./community/odoo/addons/** done')
     visited_manifests += convert(modules, items, "../enterprise/**", 2)
     print('./enterprise/** done')
-    visited_manifests += convert(modules, items, "../design-themes/**", 2)
-    print('./design-themes/** done')
+    # visited_manifests += convert(modules, items, "../design-themes/**", 2)
+    # print('./design-themes/** done')
 
 
     manifests = get_all_manifests(m, "../community/addons/**", 3)
     manifests += get_all_manifests(m, "../community/odoo/addons/**", 4)
     manifests += get_all_manifests(m, "../enterprise/**", 2)
-    manifests += get_all_manifests(m, "../design-themes/**", 2)
+    # manifests += get_all_manifests(m, "../design-themes/**", 2)
 
     visited_manifests = list(set(visited_manifests))
     manifests = list(set(manifests))

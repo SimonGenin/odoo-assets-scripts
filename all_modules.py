@@ -18,7 +18,7 @@ if __name__ == '__main__':
         '../community/addons',
         '../enterprise',
         '../community/odoo/addons',
-        '../design-themes',
+        # '../design-themes',
     ]
 
     keep = []

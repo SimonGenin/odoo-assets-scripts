@@ -11,7 +11,7 @@ def update_path(items):
         enterprise = "../enterprise/" + path
         base = "../community/odoo/addons/" + path
         community = "../community/addons/" + path
-        themes = "../design-themes/" + path
+        # themes = "../design-themes/" + path
 
         if os.path.exists(enterprise):
             news.append((a, b, c, d, enterprise))
@@ -19,8 +19,8 @@ def update_path(items):
             news.append((a, b, c, d, base))
         elif os.path.exists(community):
             news.append((a, b, c, d, community))
-        elif os.path.exists(themes):
-            news.append((a, b, c, d, themes))
+        # elif os.path.exists(themes):
+        #     news.append((a, b, c, d, themes))
         else:
             print("FUCK =>", a, b, c, d, e, f, path)
     return news
