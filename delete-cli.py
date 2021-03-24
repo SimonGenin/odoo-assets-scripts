@@ -85,6 +85,7 @@ def delete(id, xmlid, content):
 
 if __name__ == '__main__':
     modules = sys.argv[1].split(',')
+
     data = get_data(modules)
 
     process(data)

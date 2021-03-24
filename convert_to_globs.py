@@ -56,6 +56,11 @@ def tabulation(n):
     return "    " * n
 
 if __name__ == '__main__':
+
+    ignore = [
+        'web', 'web_editor', 'web_enterprise'
+    ]
+
     module_paths = [
         '../community/addons',
         '../enterprise',
@@ -66,6 +71,9 @@ if __name__ == '__main__':
     for module_path in module_paths:
         dirs = next(os.walk(module_path))[1]
         for d in dirs:
+            if d in ignore:
+                print(d, "is ignored.")
+                continue
             manifest_path = module_path + '/' + d + '/__manifest__.py'
             if 'test_assetsbundle' in manifest_path:
                 continue
